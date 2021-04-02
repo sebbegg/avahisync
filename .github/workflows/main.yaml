@@ -1,0 +1,29 @@
+name: Build avahisync
+
+on: [push]
+
+env:
+  IMAGE_NAME: avahisync
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Build it
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build image
+        run: |
+          docker build . \
+          --label "build.build-no=$GITHUB_RUN_NUMBER" \
+          --label "build.build-git-hash=$GITHUB_SHA" \
+          --file Dockerfile --tag avahisync
+
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+
+      - name: Push image
+        run: |
+          export GHTAG="docker.pkg.github.com/${{ github.repository }}/avahisync:latest"
+          docker tag avahisync  $GHTAG
+          docker push $GHTAG
