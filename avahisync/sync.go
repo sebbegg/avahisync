@@ -1,6 +1,7 @@
 package avahisync
 
 import (
+	"bytes"
 	"context"
 	"encoding/xml"
 	"log"
@@ -93,10 +94,13 @@ func syncEntries(config *SyncConfig, results <-chan *zeroconf.ServiceEntry) {
 }
 
 func xmlName(entry *zeroconf.ServiceEntry, config *SyncConfig) string {
-	re := regexp.MustCompile("[^\\w0-9]+")
+	re := regexp.MustCompile(`[^\w0-9]+`)
 
 	return config.FilePrefix + re.ReplaceAllString(entry.Instance, "_") + ".service"
 }
+
+const xmlHeader = `<?xml version="1.0" standalone='no'?>
+<!DOCTYPE service-group SYSTEM "avahi-service.dtd">`
 
 func serviceEntryToXml(entry *zeroconf.ServiceEntry, config *SyncConfig) ([]byte, error) {
 
@@ -113,5 +117,5 @@ func serviceEntryToXml(entry *zeroconf.ServiceEntry, config *SyncConfig) ([]byte
 	}
 
 	xmlBytes, err := xml.MarshalIndent(XmlServiceGroup, "", "  ")
-	return xmlBytes, err
+	return bytes.Join([][]byte{[]byte(xmlHeader), xmlBytes}, []byte("\n")), err
 }
