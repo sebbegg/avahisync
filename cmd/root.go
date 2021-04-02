@@ -129,7 +129,7 @@ func init() {
 	rootCmd.Flags().StringArrayP("port", "p", make([]string, 0), "Port mapping of type in:out")
 
 	hostname, _ := os.Hostname()
-	rootCmd.Flags().StringVar(&syncConfig.HostName, "hostname", hostname+".local.", "Hostname of the sync'd services")
+	rootCmd.Flags().StringVar(&syncConfig.HostName, "hostname", hostname+".local", "Hostname of the sync'd services")
 
 	rootCmd.Flags().Bool("docker", false, "Use docker api for port mapping")
 	rootCmd.Flags().Lookup("docker").NoOptDefVal = "true"
