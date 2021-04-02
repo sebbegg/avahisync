@@ -17,7 +17,7 @@ jobs:
           docker build . \
           --label "build.build-no=$GITHUB_RUN_NUMBER" \
           --label "build.build-git-hash=$GITHUB_SHA" \
-          --file Dockerfile --tag avahisync
+          --file Dockerfile --tag avahisync:latest
 
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
@@ -25,5 +25,5 @@ jobs:
       - name: Push image
         run: |
           export GHTAG="docker.pkg.github.com/${{ github.repository }}/avahisync:latest"
-          docker tag avahisync  $GHTAG
+          docker tag avahisync:latest  $GHTAG
           docker push $GHTAG
