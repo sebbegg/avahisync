@@ -83,13 +83,13 @@ to quickly create a Cobra application.`,
 
 func initSyncConfig(cmd *cobra.Command) {
 
-	//syncConfig.PortMapper = portMapperFromFlags(cmd)
 	useDocker, err := cmd.Flags().GetBool("docker")
 	if useDocker && err == nil {
+		log.Println("Trying a docker port mapper")
 		syncConfig.PortMapper, err = avahisync.NewDockerPortMapper()
-	}
-	if err != nil {
-		log.Fatalf("Could not init docker port mapper: %s", err.Error())
+		if err != nil {
+			log.Fatalf("Could not init docker port mapper: %s", err.Error())
+		}
 	} else {
 		syncConfig.PortMapper = portMapperFromFlags(cmd)
 	}
