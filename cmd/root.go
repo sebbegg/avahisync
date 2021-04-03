@@ -35,7 +35,7 @@ var syncConfig *avahisync.SyncConfig
 
 func portMapperFromFlags(cmd *cobra.Command) avahisync.PortMapper {
 
-	portMap := make(avahisync.StaticPortMap, 0)
+	portMap := make(avahisync.StaticPortMap)
 	portMappingsRaw, err := cmd.Flags().GetStringArray("port")
 	if err != nil {
 		panic(err)
@@ -49,7 +49,7 @@ func portMapperFromFlags(cmd *cobra.Command) avahisync.PortMapper {
 		return uint16(number)
 	}
 
-	pattern := regexp.MustCompile("(\\d+):(\\d+)")
+	pattern := regexp.MustCompile(`(\d+):(\d+)`)
 	for _, s := range portMappingsRaw {
 		if groups := pattern.FindStringSubmatch(s); groups != nil {
 			portMap[parseGroup(groups[1])] = parseGroup(groups[2])
@@ -84,9 +84,11 @@ to quickly create a Cobra application.`,
 func initSyncConfig(cmd *cobra.Command) {
 
 	//syncConfig.PortMapper = portMapperFromFlags(cmd)
-	if useDocker, err := cmd.Flags().GetBool("docker"); useDocker && err == nil {
+	useDocker, err := cmd.Flags().GetBool("docker")
+	if useDocker && err == nil {
 		syncConfig.PortMapper, err = avahisync.NewDockerPortMapper()
-	} else if err != nil {
+	}
+	if err != nil {
 		log.Fatalf("Could not init docker port mapper: %s", err.Error())
 	} else {
 		syncConfig.PortMapper = portMapperFromFlags(cmd)
