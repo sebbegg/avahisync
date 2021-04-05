@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"path"
 	"regexp"
+	"strings"
 
 	"github.com/grandcat/zeroconf"
 )
@@ -68,10 +69,27 @@ type XmlServiceEntry struct {
 	TxtRecords []string `xml:"txt-record"`
 }
 
+const SyncedMarkerText string = "from-avahi-sync=1"
+
+func IsSyncedEntry(entry *zeroconf.ServiceEntry) bool {
+	for _, record := range entry.Text {
+		if record == SyncedMarkerText {
+			return true
+		}
+	}
+	return false
+}
+
 func syncEntries(config *SyncConfig, results <-chan *zeroconf.ServiceEntry) {
 	for entry := range results {
 		log.Println("######################################")
 		log.Println(entry)
+
+		if IsSyncedEntry(entry) {
+			log.Printf("Skipping %s - already sync'd\n", entry.Instance)
+			continue
+		}
+		entry.Text = append(entry.Text, SyncedMarkerText)
 		xmlEntry, err := serviceEntryToXml(entry, config)
 
 		if err != nil {
@@ -112,7 +130,8 @@ func serviceEntryToXml(entry *zeroconf.ServiceEntry, config *SyncConfig) ([]byte
 	}
 
 	XmlServiceGroup := &XmlServiceGroup{
-		Name:    entry.Instance,
+		// fix escaped whitespace characters
+		Name:    strings.ReplaceAll(entry.Instance, `\ `, " "),
 		Service: xmlEntry,
 	}
 
