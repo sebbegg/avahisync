@@ -24,7 +24,7 @@ jobs:
           docker build . \
           --label "build.build-no=$GITHUB_RUN_NUMBER" \
           --label "build.build-git-hash=$GITHUB_SHA" \
-          --label "build.date=$BUILD_DATE"
+          --label "build.date=$BUILD_DATE" \
           --file Dockerfile --tag $IMAGE_NAME
 
       - name: Log into registry
