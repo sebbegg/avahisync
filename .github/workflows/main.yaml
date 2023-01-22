@@ -34,4 +34,6 @@ jobs:
         run: |
           set -e 
           echo "Pushing"
-          # docker push $GHTAG
+          day=$(date -u +%Y%m%d)
+          docker tag $IMAGE_NAME $IMAGE_NAME:$day
+          docker push $IMAGE_NAME:$day
