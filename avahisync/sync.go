@@ -36,7 +36,7 @@ func Sync(config *SyncConfig) {
 	entries := make(chan *zeroconf.ServiceEntry)
 	go syncEntries(config, entries)
 
-	// wait for SIGINT/SIGTERM
+	// wait for SIGINT
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
 
@@ -49,9 +49,8 @@ func Sync(config *SyncConfig) {
 		log.Fatalln("Failed to browse:", err.Error())
 	}
 
-	var s os.Signal
 	select {
-	case signals <- s:
+	case s := <-signals:
 		log.Printf("Received signal %s - stopping.", s.String())
 		Cleanup(config)
 		cancel()
