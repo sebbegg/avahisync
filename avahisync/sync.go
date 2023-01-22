@@ -21,6 +21,7 @@ type SyncConfig struct {
 	OutputFolder string
 	FilePrefix   string
 	HostName     string
+	xmlsWritten  []string
 }
 
 func Sync(config *SyncConfig) {
@@ -40,6 +41,8 @@ func Sync(config *SyncConfig) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+
+	log.Printf("Browsing service: %s in domain: %s", config.Service, config.Domain)
 	err = resolver.Browse(ctx, config.Service, config.Domain, entries)
 	if err != nil {
 		log.Fatalln("Failed to browse:", err.Error())
@@ -48,9 +51,11 @@ func Sync(config *SyncConfig) {
 	select {
 	case <-signals:
 		log.Println("Received signal SIGINT - stopping.")
+		Cleanup(config)
 		cancel()
 	case <-ctx.Done():
 		log.Println("Received ctx.Done")
+		Cleanup((config))
 	}
 	log.Println("Done")
 }
@@ -107,8 +112,16 @@ func syncEntries(config *SyncConfig, results <-chan *zeroconf.ServiceEntry) {
 		if err != nil {
 			log.Fatalf("ERROR: %s", err.Error())
 		}
+		config.xmlsWritten = append(config.xmlsWritten, fName)
 	}
 	log.Println("No more entries.")
+}
+
+func Cleanup(config *SyncConfig) {
+	for _, filename := range config.xmlsWritten {
+		log.Printf("Cleaning up: %s\n", filename)
+		os.Remove(filename)
+	}
 }
 
 func xmlName(entry *zeroconf.ServiceEntry, config *SyncConfig) string {
