@@ -10,6 +10,7 @@ import (
 	"path"
 	"regexp"
 	"strings"
+	"syscall"
 
 	"github.com/grandcat/zeroconf"
 )
@@ -35,9 +36,9 @@ func Sync(config *SyncConfig) {
 	entries := make(chan *zeroconf.ServiceEntry)
 	go syncEntries(config, entries)
 
-	// wait for SIGINT
+	// wait for SIGINT/SIGTERM
 	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, os.Interrupt)
+	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -48,9 +49,10 @@ func Sync(config *SyncConfig) {
 		log.Fatalln("Failed to browse:", err.Error())
 	}
 
+	var s os.Signal
 	select {
-	case <-signals:
-		log.Println("Received signal SIGINT - stopping.")
+	case signals <- s:
+		log.Printf("Received signal %s - stopping.", s.String())
 		Cleanup(config)
 		cancel()
 	case <-ctx.Done():
